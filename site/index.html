@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Credit Risk Scorecard: score an applicant and see why</title>
+  <meta name="description" content="An explainable retail credit scorecard. Enter an applicant's details and see the score, the decision, and the factors behind it.">
+  <meta property="og:title" content="Credit Risk Scorecard">
+  <meta property="og:description" content="Score an applicant and see exactly which factors cost them points.">
+  <meta property="og:image" content="og.png">
+  <meta name="theme-color" content="#17171A">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="favicon.png">
+  <link rel="preload" href="fonts/PublicSans.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="fonts/SourceSerif4.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#top" aria-label="Credit Risk Scorecard, back to top">Credit Risk Scorecard</a>
+      <nav aria-label="Sections">
+        <a href="#scorecard">Scorecard</a>
+        <a href="#method">Method</a>
+        <a href="#performance">Performance</a>
+        <a class="gh" href="https://github.com/omarja12/credit-risk-scoring">Source code</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="intro wrap">
+      <div class="intro-text">
+        <h1>Score an applicant and see exactly why.</h1>
+        <p class="lede">A retail credit scorecard trained on 60,000 synthetic loan applicants.
+          Change any detail and the score, the decision and the reasons behind it update.</p>
+        <div class="presets" role="group" aria-label="Load an example applicant">
+          <span class="presets-label">Try an example</span>
+          <button type="button" data-preset="strong">Strong</button>
+          <button type="button" data-preset="borderline">Borderline</button>
+          <button type="button" data-preset="risky">High risk</button>
+        </div>
+      </div>
+      <dl class="intro-stats" id="intro-stats"></dl>
+    </section>
+
+    <section class="tool wrap" aria-label="Credit decision tool">
+      <form class="applicant" id="applicant" autocomplete="off" onsubmit="return false">
+        <fieldset>
+          <legend>Income and employment</legend>
+          <div class="field">
+            <div class="field-head"><label for="annual_income">Annual income</label><output for="annual_income" data-out="annual_income"></output></div>
+            <input type="range" id="annual_income" name="annual_income" min="15000" max="200000" step="1000">
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="employment_length_years">Years with current employer</label><output for="employment_length_years" data-out="employment_length_years"></output></div>
+            <input type="range" id="employment_length_years" name="employment_length_years" min="0" max="30" step="0.5">
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Debt</legend>
+          <div class="field">
+            <div class="field-head"><label for="dti">Debt-to-income ratio</label><output for="dti" data-out="dti"></output></div>
+            <input type="range" id="dti" name="dti" min="0" max="60" step="0.5" aria-describedby="dti-hint">
+            <p class="hint" id="dti-hint">Monthly debt payments as a share of monthly income.</p>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="credit_utilization">Credit card utilization</label><output for="credit_utilization" data-out="credit_utilization"></output></div>
+            <input type="range" id="credit_utilization" name="credit_utilization" min="0" max="100" step="1" aria-describedby="util-hint">
+            <p class="hint" id="util-hint">Card balances as a share of total card limits.</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Credit history</legend>
+          <div class="field">
+            <span class="field-label" id="late-label">Late payments in the last 2 years</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="late-label" data-name="num_late_payments_2y">
+              <button type="button" role="radio" data-value="0">None</button>
+              <button type="button" role="radio" data-value="1">1</button>
+              <button type="button" role="radio" data-value="2">2</button>
+              <button type="button" role="radio" data-value="3">3 or more</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label" id="delinq-label">Ever been delinquent</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="delinq-label" data-name="ever_delinquent">
+              <button type="button" role="radio" data-value="0">Never</button>
+              <button type="button" role="radio" data-value="1">Yes</button>
+            </div>
+          </div>
+          <div class="field" id="months-field">
+            <div class="field-head"><label for="months_since_last_delinquency">Months since last delinquency</label><output for="months_since_last_delinquency" data-out="months_since_last_delinquency"></output></div>
+            <input type="range" id="months_since_last_delinquency" name="months_since_last_delinquency" min="0" max="84" step="1">
+          </div>
+          <div class="field">
+            <span class="field-label" id="bk-label">Bankruptcy in the last 10 years</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="bk-label" data-name="has_bankruptcy_10y">
+              <button type="button" role="radio" data-value="0">No</button>
+              <button type="button" role="radio" data-value="1">Yes</button>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Loan</legend>
+          <div class="field">
+            <label class="field-label" for="loan_purpose">Purpose</label>
+            <div class="select">
+              <select id="loan_purpose" name="loan_purpose">
+                <option value="debt_consolidation">Debt consolidation</option>
+                <option value="credit_card">Credit card refinancing</option>
+                <option value="home_improvement">Home improvement</option>
+                <option value="car">Car</option>
+                <option value="medical">Medical</option>
+                <option value="small_business">Small business</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <aside class="decision" id="decision" aria-live="polite" aria-label="Decision">
+        <div class="verdict">
+          <div class="score-block">
+            <span class="score" id="score">&nbsp;</span>
+            <span class="score-of">out of 850</span>
+          </div>
+          <div class="outcome">
+            <span class="outcome-word" id="outcome"></span>
+            <span class="outcome-sub" id="outcome-sub"></span>
+          </div>
+        </div>
+
+        <div class="band" id="band" aria-hidden="true">
+          <div class="band-track" id="band-track"></div>
+          <div class="band-marker" id="band-marker"><span></span></div>
+          <div class="band-scale"><span>300</span><span>850</span></div>
+        </div>
+
+        <dl class="facts">
+          <div><dt>Probability of default</dt><dd id="pd"></dd></div>
+          <div><dt>Risk grade</dt><dd id="grade"></dd></div>
+        </dl>
+
+        <div class="reasons">
+          <h2>What's lowering this score</h2>
+          <p class="reasons-hint">Points lost on each factor compared with its best range.</p>
+          <ol id="reasons"></ol>
+        </div>
+
+        <div class="decision-actions">
+          <button type="button" class="link-btn" id="copy-link">Copy link to this applicant</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section wrap" id="scorecard">
+      <div class="section-head">
+        <h2>The scorecard</h2>
+        <p>Each row is one factor, split into ranges worth a fixed number of points. The highlighted
+          range is where this applicant falls, and the highlighted points add up to the score.
+          Factors are ordered by how much they separate good loans from bad ones.</p>
+      </div>
+      <div class="grid" id="grid"></div>
+      <p class="grid-total" id="grid-total"></p>
+    </section>
+
+    <section class="section wrap" id="method">
+      <div class="section-head">
+        <h2>How it's built</h2>
+        <p>The standard method for application scorecards at retail lenders, chosen because every
+          decision can be explained to the applicant, an auditor or a regulator.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Bin each factor</h3>
+          <p>Each input is split into ranges, then neighbouring ranges are merged until risk moves in
+            one direction only. Each range gets a Weight of Evidence, the log ratio of good to bad loans
+            in it. Factors that barely separate the two are dropped.</p>
+        </li>
+        <li>
+          <h3>Fit the model</h3>
+          <p>A logistic regression is fitted on the binned factors, using only the training data so the
+            test results are honest. Six of fourteen candidate factors were dropped for weak signal.</p>
+        </li>
+        <li>
+          <h3>Scale to points</h3>
+          <p>The model is converted to points: 600 at odds of 20 to 1, and every 50 points doubles the
+            odds of repayment. Scoring by points gives exactly the same ranking as the model.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="section wrap" id="performance">
+      <div class="section-head">
+        <h2>How well it works</h2>
+        <p id="perf-intro"></p>
+      </div>
+      <div class="perf">
+        <div class="metrics" id="metrics"></div>
+        <figure class="chart">
+          <figcaption>Predicted and actual default rate by grade</figcaption>
+          <div id="calibration"></div>
+        </figure>
+        <figure class="chart">
+          <figcaption>Ranking quality (ROC curve)</figcaption>
+          <div id="roc"></div>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p>Built by <a href="https://github.com/omarja12">Your Name</a>. Available for freelance
+        credit risk and scoring projects: <a href="mailto:you@example.com">you@example.com</a></p>
+      <p class="fineprint">Trained on synthetic data only. The grades and approval policy are
+        illustrative and are not any lender's real criteria.</p>
+    </div>
+  </footer>
+
+  <div class="dock" id="dock" aria-hidden="true">
+    <span class="dock-score" id="dock-score"></span>
+    <span class="dock-outcome" id="dock-outcome"></span>
+    <span class="dock-grade" id="dock-grade"></span>
+    <a href="#decision" class="dock-link" tabindex="-1">Details</a>
+  </div>
+
+  <noscript><p class="wrap">This page needs JavaScript to score applicants.</p></noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
