@@ -154,11 +154,11 @@ credit-risk-scoring/
 
 ## About
 
-Built by [Your Name]. I build credit risk models, scorecards and interpretable
+Built by [Omar Ja](https://github.com/omarja12). I build credit risk models, scorecards and interpretable
 machine learning for lenders and fintechs, from data preparation to a working
 decision tool.
 
-Available for freelance projects: [your.email@example.com](mailto:your.email@example.com) · [LinkedIn](https://linkedin.com/in/YOUR_PROFILE)
+Available for freelance projects. More of my work: [github.com/omarja12](https://github.com/omarja12?tab=repositories)
 
 ## License
 
